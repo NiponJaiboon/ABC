@@ -1,0 +1,79 @@
+# การทดสอบรัน Docker Compose
+
+## ขั้นตอนการรัน
+
+1. **เปิด Terminal** และนำทางไปยังโฟลเดอร์ที่มีไฟล์ docker-compose.yml:
+
+   ```bash
+   cd /Users/nevelopdevper/iDev/ABC
+   ```
+
+2. **รันระบบทั้งหมด**:
+
+   ```bash
+   docker-compose up
+   ```
+
+   หรือรันในโหมด detached (ทำงานเบื้องหลัง):
+
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **รอให้ระบบเริ่มทำงาน** (อาจใช้เวลาสักครู่ในการ build images ครั้งแรก)
+
+## การทดสอบระบบ
+
+1. **ทดสอบ Backend API**:
+   - เปิดเบราว์เซอร์ไปที่: http://localhost:5000/swagger
+   - หรือทดสอบด้วย curl: `curl http://localhost:5000/weatherforecast`
+
+2. **ทดสอบ Frontend**:
+   - เปิดเบราว์เซอร์ไปที่: http://localhost:3000
+
+3. **ตรวจสอบฐานข้อมูล**:
+   - เชื่อมต่อ SQL Server ด้วยโปรแกรมจัดการฐานข้อมูล (เช่น Azure Data Studio)
+   - Host: localhost
+   - Port: 1433
+   - User: sa
+   - Password: YourStrongPassword!
+   - Database: ABC
+
+## การดูบันทึก (Logs)
+
+```bash
+# ดูบันทึกทั้งหมด
+docker-compose logs
+
+# ดูบันทึกเฉพาะ service
+docker-compose logs backend
+docker-compose logs frontend
+docker-compose logs db
+
+# ดูบันทึกแบบ real-time
+docker-compose logs -f
+```
+
+## การจัดการคอนเทนเนอร์
+
+```bash
+# หยุดการทำงาน
+docker-compose down
+
+# หยุดและลบ volumes (ข้อมูลในฐานข้อมูลจะหายไป)
+docker-compose down -v
+
+# สร้าง build ใหม่
+docker-compose build
+
+# รีสตาร์ทเฉพาะบริการ
+docker-compose restart backend
+```
+
+## การแก้ไขปัญหาเบื้องต้น
+
+- หากมีปัญหาการเชื่อมต่อระหว่าง services ให้ตรวจสอบ network settings
+- หากฐานข้อมูลเชื่อมต่อไม่ได้ ลอง wait-for-it script หรือใช้ depends_on condition
+- ถ้า frontend ไม่สามารถเชื่อมต่อ API ได้ ตรวจสอบค่า NEXT_PUBLIC_API_URL
+
+ต้องการคำแนะนำเพิ่มเติมในส่วนไหนไหมครับ?

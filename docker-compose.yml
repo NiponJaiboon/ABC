@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./Backend/src
+      dockerfile: Dockerfile
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ABC;User=sa;Password=YourStrongPassword!;
+    depends_on:
+      - db
+    networks:
+      - abc-network
+
+  frontend:
+    build:
+      context: ./Frontend/src/abc-client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:80
+    depends_on:
+      - backend
+    networks:
+      - abc-network
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrongPassword!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    networks:
+      - abc-network
+
+networks:
+  abc-network:
+    driver: bridge
+
+volumes:
+  sqldata:
