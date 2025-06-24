@@ -185,3 +185,14 @@ docker compose up -d
 - **ตรวจสอบ migration script ก่อน deploy**
 - **Backup database ก่อน migration เสมอ**
 - **Test migration ใน staging environment ก่อน**
+
+
+💡 Tips:
+แยก Frontend/Backend - deploy คนละ platform
+ใช้ Supabase - database ไม่ต้องกังวล
+Setup CI/CD - auto-deploy เมื่อ push
+Monitor Usage - ดู billing ก่อนเกิน free tier
+🎯 แนวทางแนะนำ:
+Railway: Backend API
+Vercel: Next.js Frontend
+Supabase: Database (ใช้เดิมต่อได้)
