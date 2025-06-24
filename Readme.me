@@ -92,3 +92,96 @@ ABC/
     ├── dev.sh            # dotnet watch run
     ├── build.sh          # docker build
     └── deploy.sh         # docker compose up
+
+Migration
+# ABC Project
+
+## Database Management
+
+### Development Environment
+
+#### Method 1: dotnet CLI (แนะนำ)
+```bash
+cd Backend/src/API
+
+# สร้าง migration
+dotnet ef migrations add MigrationName
+
+# อัพเดท database
+dotnet ef database update
+```
+
+#### Method 2: Automatic Migration (ระวัง!)
+```csharp
+// Program.cs - ใช้เฉพาะ Development และ Database ใหม่
+if (app.Environment.IsDevelopment())
+{
+    context.Database.Migrate(); // อาจ error ถ้า table มีอยู่แล้ว
+}
+```
+
+### Production Environment
+
+#### ⚠️ ห้ามใช้ Automatic Migration
+```bash
+# สร้าง SQL script
+dotnet ef migrations script --output migration.sql
+
+# Review script ก่อน
+cat migration.sql
+
+# รัน script ใน Production Database manually
+psql -h your-host -U username -d database -f migration.sql
+```
+
+### แก้ไขปัญหา Table Already Exists
+
+#### วิธีที่ 1: Empty Migration
+```bash
+dotnet ef migrations add SyncExistingTables
+# แก้ไขไฟล์ให้ Up() และ Down() ว่าง
+dotnet ef database update
+```
+
+#### วิธีที่ 2: Manual Sync
+```sql
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20241225000000_InitialCreate', '8.0.0');
+```
+
+## Development Workflow
+
+### การพัฒนาปกติ:
+```bash
+# Terminal 1: Backend Development
+cd Backend/src/API
+dotnet watch run
+
+# Terminal 2: Database Operations
+cd Backend/src/API
+dotnet ef migrations add NewFeature
+dotnet ef database update
+
+# Terminal 3: Frontend Development
+cd Frontend/abc-client
+npm run dev
+```
+
+### การ Deploy:
+```bash
+# 1. สร้าง Migration Script
+dotnet ef migrations script --output migration.sql
+
+# 2. Deploy Application
+docker compose up -d
+
+# 3. รัน Migration Script manually
+# (ผ่าน Supabase Dashboard หรือ CLI)
+```
+
+## ⚠️ คำเตือน
+
+- **ห้ามใช้ automatic migration ใน Production**
+- **ตรวจสอบ migration script ก่อน deploy**
+- **Backup database ก่อน migration เสมอ**
+- **Test migration ใน staging environment ก่อน**
