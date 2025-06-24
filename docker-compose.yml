@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -9,9 +7,7 @@ services:
       - "5001:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=db;Database=ABC;User=sa;Password=YourStrongPassword!;
-    depends_on:
-      - db
+      - ConnectionStrings__DefaultConnection=Host=aws-0-ap-southeast-1.pooler.supabase.com;Database=postgres;Username=postgres.itrqgmrnicfrxllxwryv;Password=ABCP@ssw0rd!;SSL Mode=Require;Trust Server Certificate=true;
     networks:
       - abc-network
 
@@ -28,21 +24,6 @@ services:
     networks:
       - abc-network
 
-  db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrongPassword!
-    ports:
-      - "1433:1433"
-    volumes:
-      - sqldata:/var/opt/mssql
-    networks:
-      - abc-network
-
 networks:
   abc-network:
     driver: bridge
-
-volumes:
-  sqldata:
