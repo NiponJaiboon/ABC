@@ -78,3 +78,17 @@ docker-compose restart backend
 
 ต้องการคำแนะนำเพิ่มเติมในส่วนไหนไหมครับ?
 
+Project Structure แนะนำ:
+ABC/
+├── .env.development        # Local dev secrets
+├── .env.production        # Production secrets
+├── docker-compose.yml     # Production
+├── docker-compose.dev.yml # Development (ถ้าจำเป็น)
+├── Backend/
+│   └── src/API/
+│       ├── appsettings.Development.json
+│       └── appsettings.Production.json
+└── scripts/
+    ├── dev.sh            # dotnet watch run
+    ├── build.sh          # docker build
+    └── deploy.sh         # docker compose up
