@@ -4,17 +4,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    options.UseNpgsql(connectionString, npgsqlOptions =>
-    {
-        npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorCodesToAdd: null);
-        npgsqlOptions.CommandTimeout(30);
-    });
-});
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure HTTPS redirection with proper port
 builder.Services.AddHttpsRedirection(options =>
@@ -49,12 +39,6 @@ if (app.Environment.IsDevelopment())
             app.Logger.LogError(ex, "Database connection failed: {Message}", ex.Message);
         }
     }
-}
-
-// Only use HTTPS redirection in production or when explicitly configured
-if (!app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("UseHttpsRedirection"))
-{
-    app.UseHttpsRedirection();
 }
 
 // เพิ่ม endpoint ทดสอบง่ายๆ ก่อน
