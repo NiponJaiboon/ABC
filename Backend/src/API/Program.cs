@@ -1,6 +1,9 @@
 using API.Extensions;
 using Application.Mappings;
+using Application.Services;
+using Core.Interfaces;
 using Infrastructure.Data;
+using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +18,14 @@ builder.Services.AddHttpsRedirection(options =>
     options.HttpsPort = 5001; // Explicitly set HTTPS port
 });
 
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Register services and repositories
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+
+builder.Services.AddScoped<IPortfolioService, PortfolioService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
 // Add services to the container.
