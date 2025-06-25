@@ -34,7 +34,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<Portfolio?> GetPortfolioByIdAsync(int id)
+        public async Task<Portfolio> GetPortfolioByIdAsync(int id)
         {
             try
             {
@@ -62,7 +62,7 @@ namespace Application.Services
             }
         }
 
-        public async Task<Portfolio?> GetPortfolioWithDetailsAsync(int portfolioId)
+        public async Task<Portfolio> GetPortfolioWithDetailsAsync(int portfolioId)
         {
             try
             {
