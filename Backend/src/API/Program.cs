@@ -1,3 +1,4 @@
+using API.Extensions;
 using Application.Mappings;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -45,46 +46,6 @@ if (app.Environment.IsDevelopment())
 }
 
 // เพิ่ม endpoint ทดสอบง่ายๆ ก่อน
-app.MapGet("/", () => "API is running!")
-    .WithName("Root")
-    .WithOpenApi();
-
-// Database Health Check Endpoint
-app.MapGet("/health/db", async (ApplicationDbContext context) =>
-{
-    try
-    {
-        // ทดสอบการเชื่อมต่อ
-        await context.Database.CanConnectAsync();
-
-        // ดึงข้อมูลเวอร์ชันของ PostgreSQL
-        var connectionString = context.Database.GetConnectionString();
-
-        return Results.Ok(new
-        {
-            Console = "Database Health Check",
-            Status = "Connected",
-            Database = "PostgreSQL",
-            Timestamp = DateTime.UtcNow,
-            Message = "Successfully connected to Supabase",
-            ConnectionInfo = new
-            {
-                Host = connectionString?.Contains("Host=") == true ? connectionString.Split("Host=")[1].Split(";")[0] : "N/A",
-                Database = connectionString?.Contains("Database=") == true ? connectionString.Split("Database=")[1].Split(";")[0] : "N/A"
-            }
-        });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem(
-            detail: ex.Message,
-            statusCode: 500,
-            title: "Database Connection Error",
-            type: "https://httpstatuses.org/500"
-        );
-    }
-})
-.WithName("DatabaseHealthCheck")
-.WithOpenApi();
+EndpointExtensions.ConfigureHealthCheckEndpoints(app);
 
 app.Run();
