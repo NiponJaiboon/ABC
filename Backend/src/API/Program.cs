@@ -1,3 +1,4 @@
+using Application.Mappings;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,8 @@ builder.Services.AddHttpsRedirection(options =>
     options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
     options.HttpsPort = 5001; // Explicitly set HTTPS port
 });
+
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
