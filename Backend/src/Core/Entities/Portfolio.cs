@@ -1,28 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Core.Entities
 {
-   public class Portfolio
+    [Table("Portfolios")]
+    public class Portfolio
     {
         public int Id { get; set; }
 
         [Required]
-        public string UserId { get; set; }
-        public ApplicationUser User { get; set; }
+        [MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
 
-        [Required]
-        public string Title { get; set; }
+        [MaxLength(1000)]
+        public string? Description { get; set; }
 
-        public string Description { get; set; }
-
-        public DateTime CreatedAt { get; set; }
-
+        public bool IsPublic { get; set; } = false;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        public ICollection<Project> Projects { get; set; }
+        [Required]
+        [MaxLength(450)]
+        public string UserId { get; set; } = string.Empty;
+
+        public ICollection<Project> Projects { get; set; } = new List<Project>();
     }
 }
