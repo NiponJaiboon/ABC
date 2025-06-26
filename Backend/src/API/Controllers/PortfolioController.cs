@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Application.Dtos;
+using Application.Services;
+using Core.Entities;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,43 +13,41 @@ namespace API.Controllers
         private readonly IPortfolioService _portfolioService;
         private readonly ILogger<PortfolioController> _logger;
 
-        public PortfolioController(
-            IPortfolioService portfolioService,
-            ILogger<PortfolioController> logger)
+        public PortfolioController(IPortfolioService portfolioService, ILogger<PortfolioController> logger)
         {
-            _portfolioService = portfolioService;
-            _logger = logger;
+            _portfolioService = portfolioService ?? throw new ArgumentNullException(nameof(portfolioService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// Get all portfolios
-        /// </summary>
-        /// <returns>List of portfolios</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PortfolioDto>>> GetAllPortfolios()
+        public async Task<ActionResult<IEnumerable<PortfolioDto>>> GetPortfolios()
         {
             try
             {
+                _logger.LogInformation("Getting all portfolios");
                 var portfolios = await _portfolioService.GetAllPortfoliosAsync();
-                return Ok(portfolios);
+                var portfolioDtos = portfolios.Select(p => new PortfolioDto
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Description = p.Description,
+                    UserId = p.UserId
+                });
+                return Ok(portfolioDtos);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving all portfolios");
-                return StatusCode(500, "An error occurred while retrieving portfolios");
+                _logger.LogError(ex, "Error getting portfolios");
+                return StatusCode(500, new { Error = "Internal server error", Message = ex.Message });
             }
         }
 
-        /// <summary>
-        /// Get portfolio by ID
-        /// </summary>
-        /// <param name="id">Portfolio ID</param>
-        /// <returns>Portfolio details</returns>
         [HttpGet("{id}")]
-        public async Task<ActionResult<PortfolioDto>> GetPortfolioById(int id)
+        public async Task<ActionResult<Portfolio>> GetPortfolio(int id)
         {
             try
             {
+                _logger.LogInformation("Getting portfolio with ID: {Id}", id);
                 var portfolio = await _portfolioService.GetPortfolioByIdAsync(id);
 
                 if (portfolio == null)
@@ -63,10 +59,33 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving portfolio with ID: {PortfolioId}", id);
-                return StatusCode(500, "An error occurred while retrieving the portfolio");
+                _logger.LogError(ex, "Error getting portfolio with ID: {Id}", id);
+                return StatusCode(500, new { Error = "Internal server error", Message = ex.Message });
             }
         }
 
+        [HttpPost]
+        public async Task<ActionResult<Portfolio>> CreatePortfolio([FromBody] Portfolio portfolio)
+        {
+            try
+            {
+                _logger.LogInformation("Creating new portfolio");
+                var createdPortfolio = await _portfolioService.CreatePortfolioAsync(portfolio);
+                return CreatedAtAction(nameof(GetPortfolio), new { id = createdPortfolio.Id }, createdPortfolio);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating portfolio");
+                return StatusCode(500, new { Error = "Internal server error", Message = ex.Message });
+            }
+        }
+
+        // เพิ่ม endpoint ทดสอบง่ายๆ
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            _logger.LogInformation("Portfolio controller test endpoint called");
+            return Ok(new { Message = "Portfolio Controller is working!", Timestamp = DateTime.Now });
+        }
     }
 }

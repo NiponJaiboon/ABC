@@ -6,81 +6,81 @@ using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Configure HTTPS redirection with proper port
-builder.Services.AddHttpsRedirection(options =>
+try
 {
-    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
-    options.HttpsPort = 5001; // Explicitly set HTTPS port
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-// Register services and repositories
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+    builder.ConfigureSerilog();
 
-// Register application services
-builder.Services.AddScoped<IPortfolioService, PortfolioService>();
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+    Log.Information("Starting ABC API...");
 
-// Add controllers
-builder.Services.AddControllers();
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-
-    // Test database connection
-    using (var scope = app.Services.CreateScope())
+    // Configure HTTPS redirection with proper port
+    builder.Services.AddHttpsRedirection(options =>
     {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        try
+        options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+        options.HttpsPort = 5001; // Explicitly set HTTPS port
+    });
+
+    // Register services and repositories
+    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+    builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+
+    // Register application services
+    builder.Services.AddScoped<IPortfolioService, PortfolioService>();
+    builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+
+    // Add controllers
+    builder.Services.AddControllers();
+
+    // Add services to the container.
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+
+        // Test database connection
+        using (var scope = app.Services.CreateScope())
         {
-            await context.Database.CanConnectAsync();
-            app.Logger.LogInformation("Database connection successful");
-            await SeedDatabaseAsync(context);
-        }
-        catch (Exception ex)
-        {
-            app.Logger.LogError(ex, "Database connection failed: {Message}", ex.Message);
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            try
+            {
+                await context.Database.CanConnectAsync();
+                Log.Information("Database connection successful");
+                SeedDataExtensions.SeedDatabaseAsync(context).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Database connection failed: {Message}", ex.Message);
+            }
         }
     }
+
+    EndpointExtensions.ConfigureHealthCheckEndpoints(app);
+
+    app.MapControllers();
+
+    Log.Information("ABC API started successfully");
+    app.Run();
 }
-
-// เพิ่ม endpoint ทดสอบง่ายๆ ก่อน
-EndpointExtensions.ConfigureHealthCheckEndpoints(app);
-
-app.Run();
-
-
-static async Task SeedDatabaseAsync(ApplicationDbContext context)
+catch (Exception ex)
 {
-    // Seed Skills
-    if (!context.Skills.Any())
-    {
-        var skills = new[]
-        {
-            new Skill { Name = "C#", Category = "Programming Language" },
-            new Skill { Name = "ASP.NET Core", Category = "Framework" },
-            new Skill { Name = "Entity Framework", Category = "ORM" },
-            new Skill { Name = "PostgreSQL", Category = "Database" },
-            new Skill { Name = "React", Category = "Frontend Framework" },
-            new Skill { Name = "Next.js", Category = "Frontend Framework" }
-        };
-
-        context.Skills.AddRange(skills);
-        await context.SaveChangesAsync();
-    }
+    Log.Fatal(ex, "Application terminated unexpectedly");
 }
+finally
+{
+    Log.CloseAndFlush();
+}
+
+
+
