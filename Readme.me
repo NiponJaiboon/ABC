@@ -203,6 +203,7 @@ dotnet ef migrations add InitialCreate \
   --startup-project . \
   --context ApplicationDbContext \
   --output-dir Data/Migrations
-  
+
 # รัน migration
 dotnet ef database update --project ../Infrastructure --startup-project . --context ApplicationDbContext
+

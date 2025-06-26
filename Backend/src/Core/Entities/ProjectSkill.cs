@@ -15,7 +15,7 @@ namespace Core.Entities
         [ForeignKey("Skill")]
         public int SkillId { get; set; }
 
-        public int? ProficiencyLevel { get; set; }
+        public int ProficiencyLevel { get; set; }
         public bool IsPrimary { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

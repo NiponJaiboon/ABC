@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
-namespace Core.Entities
+namespace Application.Dtos
 {
-    [Table("Projects")]
-    public class Project
+    public class UpdateProjectRequest
     {
         public int Id { get; set; }
 
@@ -27,14 +25,7 @@ namespace Core.Entities
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public bool IsCompleted { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
-
-        [ForeignKey("Portfolio")]
+        public bool IsCompleted { get; set; }
         public int PortfolioId { get; set; }
-
-        public Portfolio Portfolio { get; set; } = null!;
-        public ICollection<ProjectSkill> ProjectSkills { get; set; } = new List<ProjectSkill>();
     }
 }

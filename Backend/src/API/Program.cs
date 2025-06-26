@@ -29,9 +29,15 @@ try
     // Register services and repositories
     builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
     builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+    builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+
+
 
     // Register application services
     builder.Services.AddScoped<IPortfolioService, PortfolioService>();
+    builder.Services.AddScoped<IProjectService, ProjectService>();
+
+    // Register AutoMapper
     builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 
     // Add controllers
@@ -81,6 +87,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-
-

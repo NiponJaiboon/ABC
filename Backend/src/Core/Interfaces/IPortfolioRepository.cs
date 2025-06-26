@@ -10,5 +10,6 @@ namespace Core.Interfaces
     {
         Task<IEnumerable<Portfolio>> GetPortfolioByUserAsync(string userId);
         Task<Portfolio> GetPortfolioWithDetailsAsync(int portfolioId);
+        Task<Portfolio> GetPortfolioWithProjectsAsync(int id);
     }
 }

@@ -17,11 +17,11 @@ namespace Core.Entities
         public string Title { get; set; } = string.Empty;
 
         [MaxLength(1000)]
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
         public bool IsPublic { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
 
         [Required]
         [MaxLength(450)]

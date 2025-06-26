@@ -48,6 +48,30 @@ namespace Application.Services
             }
         }
 
+        public async Task<Portfolio> GetPortfolioWithProjectsAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Retrieving portfolio with projects for ID: {PortfolioId}", id);
+
+                // Use the specialized repository method or generic repository with includes
+                var portfolio = await _portfolioRepository.GetPortfolioWithProjectsAsync(id);
+
+                if (portfolio == null)
+                {
+                    _logger.LogWarning("Portfolio with ID {PortfolioId} not found", id);
+                    return null;
+                }
+
+                return portfolio;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving portfolio with projects for ID: {PortfolioId}", id);
+                throw;
+            }
+        }
+
         public async Task<IEnumerable<Portfolio>> GetPortfoliosByUserIdAsync(string userId)
         {
             try

@@ -19,10 +19,10 @@ namespace Core.Entities
         public string Name { get; set; } = string.Empty;
 
         [MaxLength(50)]
-        public string? Category { get; set; }
+        public string Category { get; set; }
 
         [MaxLength(500)]
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
