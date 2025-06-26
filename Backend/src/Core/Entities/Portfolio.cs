@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
 
 namespace Core.Entities
 {
@@ -17,16 +14,20 @@ namespace Core.Entities
         public string Title { get; set; } = string.Empty;
 
         [MaxLength(1000)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public bool IsPublic { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; }
 
         [Required]
         [MaxLength(450)]
         public string UserId { get; set; } = string.Empty;
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // ✅ เปลี่ยนเป็น nullable
+        public DateTime? UpdatedAt { get; set; }
+
+        // Navigation Properties
         public ICollection<Project> Projects { get; set; } = new List<Project>();
     }
 }

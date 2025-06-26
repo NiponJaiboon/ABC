@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
+// Backend/src/Core/Entities/Project.cs
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Core.Entities
 {
@@ -17,18 +14,20 @@ namespace Core.Entities
         public string Title { get; set; } = string.Empty;
 
         [MaxLength(2000)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         [MaxLength(500)]
-        public string ProjectUrl { get; set; }
+        public string? ProjectUrl { get; set; }
 
         [MaxLength(500)]
-        public string GitHubUrl { get; set; }
+        public string? GitHubUrl { get; set; }
 
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public bool IsCompleted { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // ✅ เปลี่ยนเป็น nullable
         public DateTime? UpdatedAt { get; set; }
 
         [ForeignKey("Portfolio")]

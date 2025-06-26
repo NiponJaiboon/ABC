@@ -128,6 +128,8 @@ namespace Application.Services
             {
                 _logger.LogInformation("Updating portfolio with ID: {PortfolioId}", portfolio.Id);
 
+                // ✅ Ensure UpdatedAt is set
+                portfolio.UpdatedAt = DateTime.UtcNow;
                 // Check if portfolio exists
                 var existingPortfolio = await GetPortfolioByIdAsync(portfolio.Id);
                 if (existingPortfolio == null)
