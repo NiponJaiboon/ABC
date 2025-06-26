@@ -7,7 +7,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-BASE_URL="http://localhost:5011/api"
+BASE_URL="http://localhost:5001/api"
 
 # Function to wait for user input
 wait_for_enter() {
@@ -27,7 +27,7 @@ display_step() {
 
 echo -e "${GREEN}🎯 Interactive API Testing Script${NC}"
 echo -e "${YELLOW}This script will test all API endpoints step by step.${NC}"
-echo -e "${YELLOW}Make sure your API is running on http://localhost:5011${NC}"
+echo -e "${YELLOW}Make sure your API is running on http://localhost:5001${NC}"
 wait_for_enter
 
 # Check API health
