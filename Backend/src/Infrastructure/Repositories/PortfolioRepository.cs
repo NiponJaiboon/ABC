@@ -22,7 +22,11 @@ namespace Infrastructure.Repositories
         {
             using (var connection = _applicationDbContext.Database.GetDbConnection())
             {
-                var sql = "SELECT * FROM Portfolios WHERE UserId = @UserId";
+                var sql = @"
+                SELECT Id, UserId, Title, Description, CreatedAt, UpdatedAt
+                FROM Portfolios
+                WHERE UserId = @UserId";
+
                 var portfolios = await connection.QueryAsync<Portfolio>(sql, new { UserId = userId });
                 return portfolios;
             }
@@ -32,7 +36,10 @@ namespace Infrastructure.Repositories
         {
             using (var connection = _applicationDbContext.Database.GetDbConnection())
             {
-                var sql = "SELECT * FROM Portfolios WHERE Id = @Id";
+                var sql = @"
+                SELECT Id, UserId, Title, Description, CreatedAt, UpdatedAt
+                FROM Portfolios
+                WHERE Id = @Id";
                 var portfolio = await connection.QueryFirstOrDefaultAsync<Portfolio>(
                     sql,
                     new { Id = portfolioId }
@@ -41,47 +48,62 @@ namespace Infrastructure.Repositories
             }
         }
 
+
         public async Task<Portfolio?> GetPortfolioWithProjectsAsync(int id)
         {
+            // เปิดการเชื่อมต่อฐานข้อมูลจาก Entity Framework context
             using (var connection = _applicationDbContext.Database.GetDbConnection())
             {
-            // Get portfolio
-            var portfolioSql = "SELECT * FROM Portfolios WHERE Id = @Id";
-            var portfolio = await connection.QueryFirstOrDefaultAsync<Portfolio>(portfolioSql, new { Id = id });
-            
-            if (portfolio == null)
-                return null;
+                // ดึงข้อมูล Portfolio ตาม ID ที่ระบุ
+                var portfolioSql = @"
+                SELECT Id, UserId, Title, Description, CreatedAt, UpdatedAt
+                FROM Portfolios
+                WHERE Id = @Id";
+                var portfolio = await connection.QueryFirstOrDefaultAsync<Portfolio>(portfolioSql, new { Id = id });
 
-            // Get projects for the portfolio
-            var projectsSql = "SELECT * FROM Projects WHERE PortfolioId = @PortfolioId";
-            var projects = await connection.QueryAsync<Project>(projectsSql, new { PortfolioId = id });
-            
-            portfolio.Projects = projects.ToList();
+                // ตรวจสอบว่าพบ Portfolio หรือไม่ ถ้าไม่พบให้คืนค่า null
+                if (portfolio == null)
+                    return null;
 
-            // Get skills for each project
-            foreach (var project in portfolio.Projects)
-            {
-                var skillsSql = @"
-                SELECT ps.*, s.* 
-                FROM ProjectSkills ps 
-                INNER JOIN Skills s ON ps.SkillId = s.Id 
-                WHERE ps.ProjectId = @ProjectId";
-                
-                var projectSkills = await connection.QueryAsync<ProjectSkill, Skill, ProjectSkill>(
-                skillsSql,
-                (projectSkill, skill) =>
+                // ดึงข้อมูล Projects ทั้งหมดที่เชื่อมโยงกับ Portfolio นี้
+                var projectsSql = @"
+                SELECT Id, PortfolioId, Title, Description, CreatedAt, UpdatedAt
+                FROM Projects
+                WHERE PortfolioId = @PortfolioId";
+                var projects = await connection.QueryAsync<Project>(projectsSql, new { PortfolioId = id });
+
+                // กำหนด Projects ให้กับ Portfolio object
+                portfolio.Projects = projects.ToList();
+
+                // วนลูปผ่าน Projects แต่ละตัวเพื่อดึงข้อมูล Skills ที่เกี่ยวข้อง
+                foreach (var project in portfolio.Projects)
                 {
-                    projectSkill.Skill = skill;
-                    return projectSkill;
-                },
-                new { ProjectId = project.Id },
-                splitOn: "Id"
-                );
-                
-                project.ProjectSkills = projectSkills.ToList();
-            }
+                    // SQL query สำหรับดึงข้อมูล ProjectSkills และ Skills ที่เชื่อมโยง
+                    var skillsSql = @"
+                    SELECT ps.Id, ps.ProjectId, ps.SkillId, s.Id, s.Name, s.Category
+                    FROM ProjectSkills ps
+                    INNER JOIN Skills s ON ps.SkillId = s.Id
+                    WHERE ps.ProjectId = @ProjectId";
 
-            return portfolio;
+                    // ดึงข้อมูลและ map ความสัมพันธ์ระหว่าง ProjectSkill และ Skill
+                    var projectSkills = await connection.QueryAsync<ProjectSkill, Skill, ProjectSkill>(
+                    skillsSql,
+                    (projectSkill, skill) =>
+                    {
+                        // กำหนด Skill object ให้กับ ProjectSkill
+                        projectSkill.Skill = skill;
+                        return projectSkill;
+                    },
+                    new { ProjectId = project.Id },
+                    splitOn: "Id" // แยกข้อมูลโดยใช้ Id column เป็นจุดแบ่ง
+                    );
+
+                    // กำหนด ProjectSkills ให้กับ Project object
+                    project.ProjectSkills = projectSkills.ToList();
+                }
+
+                // คืนค่า Portfolio object ที่มีข้อมูลครบถ้วน
+                return portfolio;
             }
         }
     }

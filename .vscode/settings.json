@@ -1,4 +1,5 @@
 {
+  // 📁 File exclusions
   "files.exclude": {
     "**/bin": true,
     "**/obj": true,
@@ -6,18 +7,104 @@
     "**/node_modules": true,
     "**/.git": true
   },
-  "omnisharp.enableEditorConfigSupport": true,
-  "omnisharp.enableRoslynAnalyzers": true,
+
+  // 🎨 Editor formatting settings
   "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.formatOnPaste": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 4,
+  "editor.detectIndentation": false,
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  // 🔧 C# OmniSharp settings
+  "omnisharp.enableEditorConfigSupport": true,
+"omnisharp.enableRoslynAnalyzers": true,
+
+  // ⚡ Code actions
   "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit"
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
   },
+  "editor.codeActionsOnSaveTimeout": 3000,
+
+  // 🎯 .NET completion
   "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+
+  // 📋 Language-specific settings
   "[csharp]": {
     "editor.defaultFormatter": "ms-dotnettools.csharp",
     "editor.formatOnSave": true,
     "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  },
+
+  "[json]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+
+  "[xml]": {
+    "editor.tabSize": 2,
     "editor.insertSpaces": true
   },
-  "CodeGPT.apiKey": "CodeGPT Plus Beta"
+
+  "[javascript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+
+  "[typescript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+},
+
+  // 💾 Auto save
+  "files.autoSave": "onFocusChange",
+
+  // 🎨 Bracket colorization
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+
+  // 🔍 IntelliSense
+  "editor.suggestSelection": "first",
+  "editor.acceptSuggestionOnEnter": "on",
+  "editor.tabCompletion": "on",
+
+  // 🚨 Problem matcher
+  "problems.decorations.enabled": true,
+
+  // 📐 Rulers for line length
+  "editor.rulers": [80, 120],
+
+  // 🔄 Git integration
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+
+  // 🧪 Testing
+  "dotnet-test-explorer.testArguments": "",
+  "dotnet-test-explorer.pathForResultFile": "./TestResults/TestResults.xml",
+
+  // 🐛 Debugging
+  "debug.inlineValues": "on",
+  "debug.showBreakpointsInOverviewRuler": true,
+
+  // 🎨 Appearance
+  "editor.fontFamily": "'SF Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
+  "editor.fontSize": 14,
+  "editor.lineHeight": 1.5,
+
+  // 🤖 AI Assistance
+"CodeGPT.apiKey": "OpenAI",
+"dotnet.codeLens.enableReferencesCodeLens": true,
+"dotnet.codeLens.enableTestsCodeLens": true,
+"dotnet.formatting.organizeImportsOnFormat": true
 }

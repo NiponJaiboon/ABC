@@ -9,7 +9,8 @@ trim_trailing_whitespace = true
 [*.{cs,csx,vb,vbx}]
 indent_style = space
 indent_size = 4
-end_of_line = crlf
+end_of_line = lf
+max_line_length = 120
 
 # C# formatting rules
 dotnet_sort_system_directives_first = true
@@ -47,3 +48,45 @@ csharp_preserve_single_line_blocks = true
 
 # Namespace preferences
 csharp_style_namespace_declarations = file_scoped:warning
+
+# Expression-level preferences
+dotnet_prefer_auto_properties = true:suggestion
+dotnet_prefer_conditional_expression_over_assignment = true:silent
+dotnet_prefer_conditional_expression_over_return = true:silent
+dotnet_prefer_compound_assignment = true:suggestion
+dotnet_prefer_simplified_interpolation = true:suggestion
+dotnet_prefer_simplified_boolean_expressions = true:suggestion
+
+# Field preferences
+dotnet_style_readonly_field = true:suggestion
+
+# Parameter preferences
+dotnet_code_quality_unused_parameters = all:suggestion
+
+# JSON files
+[*.json]
+indent_size = 2
+
+# XML files
+[*.xml]
+indent_size = 2
+
+# YAML files
+[*.{yml,yaml}]
+indent_size = 2
+
+# JavaScript/TypeScript files
+[*.{js,ts,jsx,tsx}]
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+
+# Configuration files
+[*.{config,conf}]
+indent_size = 2
+
+# Props files
+[*.props]
+indent_size = 2

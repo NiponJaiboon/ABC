@@ -207,3 +207,129 @@ dotnet ef migrations add InitialCreate \
 # รัน migration
 dotnet ef database update --project ../Infrastructure --startup-project . --context ApplicationDbContext
 
+## 🧪 **Test Strategy ที่เราใช้:**
+
+### **📊 Test Coverage ที่มีอยู่:**
+
+#### **🏗️ Test Structure (Test Pyramid):**
+```
+        /\
+       /  \
+      / E2E \ (5-10%)
+     /______\
+    /        \
+   / Integration \ (20-30%)
+  /______________\
+ /                \
+/   Unit Tests      \ (70-80%)
+\___________________/
+```
+
+#### **📁 Test Organization:**
+```
+Tests/Application.Tests/Services/
+├── PortfolioServiceTests.cs              (17 Unit Tests - Mock-based)
+├── PortfolioServiceIntegrationTests.cs   (2 Integration Tests - In-memory DB)
+├── ProjectServiceTests.cs                (17 Unit Tests - Mock-based)
+└── ProjectServiceIntegrationTests.cs     (13 Integration Tests - In-memory DB)
+
+🎯 Total: 49 Tests - All Passing! ✅
+```
+
+### **🧪 Unit Tests (Mock-based) - เร็ว, Isolated**
+**PortfolioServiceTests (17 tests):**
+- ✅ Business logic validation
+- ✅ Error handling & edge cases  
+- ✅ Method call verification
+- ✅ Title length validation
+- ✅ User ownership logic
+
+**ProjectServiceTests (17 tests):**
+- ✅ CRUD operations logic
+- ✅ Portfolio existence validation
+- ✅ Project title validation
+- ✅ User ownership verification
+- ✅ DateTime handling logic
+
+### **🔧 Integration Tests (In-memory DB) - Real scenarios**
+**PortfolioServiceIntegrationTests (2 tests):**
+- ✅ Database persistence validation
+- ✅ EF Core navigation properties
+
+**ProjectServiceIntegrationTests (13 tests):**
+- ✅ Complete CRUD workflows
+- ✅ Real database operations
+- ✅ Entity relationships testing
+- ✅ Data validation scenarios
+
+### **⚡ การรัน Tests:**
+```bash
+# Unit tests only (เร็ว - สำหรับ development)
+dotnet test --filter "PortfolioServiceTests"
+dotnet test --filter "ProjectServiceTests"
+
+# Integration tests (ช้ากว่า - สำหรับ CI/CD)
+dotnet test --filter "Integration"
+
+# All tests
+dotnet test
+```
+
+## 🎯 **ความแตกต่างระหว่าง Unit Tests vs Integration Tests**
+
+### **🧪 Unit Tests (Mock-based)**
+```csharp
+// ตัวอย่าง: ProjectServiceTests.cs
+[Fact]
+public async Task CreateProjectAsync_WithValidProject_ReturnsCreatedProject()
+{
+    // Arrange - ใช้ Mock objects
+    _mockPortfolioService.Setup(p => p.PortfolioExistsAsync(1)).ReturnsAsync(true);
+    _mockGenericRepository.Setup(r => r.AddAsync(It.IsAny<Project>())).Returns(Task.CompletedTask);
+    
+    // Act - เรียกใช้ service
+    var result = await _projectService.CreateProjectAsync(project);
+    
+    // Assert - ตรวจสอบ method calls และ logic
+    _mockPortfolioService.Verify(p => p.PortfolioExistsAsync(1), Times.Once);
+    _mockGenericRepository.Verify(r => r.AddAsync(project), Times.Once);
+}
+```
+**🎯 จุดประสงค์:** ทดสอบ business logic แยกส่วน  
+**⚡ ความเร็ว:** เร็วมาก (milliseconds)  
+**🛡️ Isolation:** แยกขาดจาก dependencies  
+**🔍 ขอบเขต:** Method/Class เดียว
+
+### **🔧 Integration Tests (In-memory Database)**
+```csharp
+// ตัวอย่าง: ProjectServiceIntegrationTests.cs
+[Fact]
+public async Task CreateProjectAsync_WithValidData_CreatesProject()
+{
+    // Arrange - ใช้ real objects กับ in-memory database
+    var newProject = new Project { Title = "Test Project", PortfolioId = 1 };
+    
+    // Act - เรียกใช้ service จริง ไปถึง database
+    var result = await _projectService.CreateProjectAsync(newProject);
+    
+    // Assert - ตรวจสอบข้อมูลที่บันทึกจริงใน database
+    var persistedProject = await _context.Projects.FindAsync(result.Id);
+    persistedProject.Should().NotBeNull();
+}
+```
+**🎯 จุดประสงค์:** ทดสอบการทำงานร่วมกันของหลาย components  
+**⚡ ความเร็ว:** ช้ากว่า แต่ยังเร็ว  
+**🌐 Database:** In-memory database  
+**🔍 ขอบเขต:** หลาย layers ร่วมกัน
+
+### **📊 สรุปการใช้งาน:**
+| สถานการณ์ | ใช้ Unit Tests | ใช้ Integration Tests |
+|-----------|---------------|---------------------|
+| ทดสอบ Business Logic | ✅ | ❌ |
+| ทดสอบ Database Operations | ❌ | ✅ |
+| ทดสอบ Validation Rules | ✅ | ❌ |
+| ทดสอบ Entity Relationships | ❌ | ✅ |
+| Development Feedback | ✅ | ❌ |
+| CI/CD Pipeline | ✅ | ✅ |
+
+สรุปคือ **Unit Tests** ใช้สำหรับทดสอบ logic ส่วนตัว ส่วน **Integration Tests** ใช้สำหรับทดสอบการทำงานร่วมกันของหลายส่วน - ทั้งคู่มีความสำคัญและใช้เสริมกัน! 🎯
