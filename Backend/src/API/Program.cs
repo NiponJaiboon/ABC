@@ -31,11 +31,15 @@ try
     builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
     builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
-
+    // Register Generic Repositories for Skills
+    builder.Services.AddScoped<IGenericRepository<Skill>, GenericRepository<Skill>>();
+    builder.Services.AddScoped<IGenericRepository<ProjectSkill>, GenericRepository<ProjectSkill>>();
 
     // Register application services
     builder.Services.AddScoped<IPortfolioService, PortfolioService>();
     builder.Services.AddScoped<IProjectService, ProjectService>();
+    builder.Services.AddScoped<ISkillService, SkillService>();
+    builder.Services.AddScoped<IProjectSkillService, ProjectSkillService>();
 
     // Register AutoMapper
     builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);

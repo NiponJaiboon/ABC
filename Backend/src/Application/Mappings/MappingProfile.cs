@@ -64,16 +64,21 @@ namespace Application.Mappings
                     )));
 
             // Skill Mappings
-            CreateMap<Skill, SkillDto>().ReverseMap();
-            CreateMap<CreateSkillDto, Skill>()
+            CreateMap<Skill, SkillDto>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+            CreateMap<CreateSkillRequest, Skill>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.ProjectSkills, opt => opt.Ignore());
 
             // ProjectSkill Mappings
             CreateMap<ProjectSkill, ProjectSkillDto>()
-                .ForMember(dest => dest.ProjectTitle, opt => opt.MapFrom(src => src.Project.Title))
-                .ForMember(dest => dest.SkillName, opt => opt.MapFrom(src => src.Skill.Name))
-                .ReverseMap();
+                .ForMember(dest => dest.Skill, opt => opt.MapFrom(src => src.Skill));
+            CreateMap<AddSkillToProjectRequest, ProjectSkill>()
+                .ForMember(dest => dest.ProjectId, opt => opt.Ignore())
+                .ForMember(dest => dest.Project, opt => opt.Ignore())
+                .ForMember(dest => dest.Skill, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
         }
     }
 }

@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.CodeAnalysis;
 
+#nullable enable
+
 namespace Core.Entities
 {
     [Table("Portfolios")]

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,12 +42,17 @@ namespace Application.Services
             }
         }
 
-        public async Task<Project> GetProjectByIdAsync(int id)
+        public async Task<Project?> GetProjectByIdAsync(int id)
         {
             try
             {
                 _logger.LogInformation("Retrieving project with ID: {ProjectId}", id);
                 return await _unitOfWork.Repository<Project>().GetByIdAsync(id);
+            }
+            catch (KeyNotFoundException)
+            {
+                _logger.LogInformation("Project with ID {ProjectId} not found", id);
+                return null;
             }
             catch (Exception ex)
             {

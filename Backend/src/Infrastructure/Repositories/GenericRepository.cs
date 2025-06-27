@@ -20,7 +20,9 @@ namespace Infrastructure.Repositories
         public async Task<T> GetByIdAsync(int id)
         {
             var entity = await _dbContext.Set<T>().FindAsync(id);
-            return entity ?? throw new KeyNotFoundException($"Entity with id {id} not found");
+            if (entity == null)
+                throw new KeyNotFoundException($"Entity with id {id} not found");
+            return entity;
         }
 
         public async Task<IEnumerable<T>> GetAllAsync()

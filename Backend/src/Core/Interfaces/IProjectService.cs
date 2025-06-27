@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Core.Entities;
 
+#nullable enable
+
 namespace Core.Interfaces
 {
     public interface IProjectService
     {
         Task<IEnumerable<Project>> GetAllProjectsAsync();
-        Task<Project> GetProjectByIdAsync(int id);
+        Task<Project?> GetProjectByIdAsync(int id);
         Task<IEnumerable<Project>> GetProjectsByPortfolioIdAsync(int portfolioId);
         Task<Project> CreateProjectAsync(Project project);
         Task<Project> UpdateProjectAsync(Project project);

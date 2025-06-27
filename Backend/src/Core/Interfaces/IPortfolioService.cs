@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Core.Entities;
 
+#nullable enable
+
 namespace Core.Interfaces
 {
     public interface IPortfolioService
     {
         Task<IEnumerable<Portfolio>> GetAllPortfoliosAsync();
-        Task<Portfolio> GetPortfolioByIdAsync(int id);
+        Task<Portfolio?> GetPortfolioByIdAsync(int id);
         Task<Portfolio> GetPortfolioWithProjectsAsync(int id);
         Task<IEnumerable<Portfolio>> GetPortfoliosByUserIdAsync(string userId);
         Task<Portfolio> GetPortfolioWithDetailsAsync(int portfolioId);

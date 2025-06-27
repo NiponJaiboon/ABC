@@ -2,6 +2,8 @@ using Core.Entities;
 using Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
+#nullable enable
+
 namespace Application.Services
 {
     public class PortfolioService : IPortfolioService
@@ -34,12 +36,17 @@ namespace Application.Services
             }
         }
 
-        public async Task<Portfolio> GetPortfolioByIdAsync(int id)
+        public async Task<Portfolio?> GetPortfolioByIdAsync(int id)
         {
             try
             {
                 _logger.LogInformation("Retrieving portfolio with ID: {PortfolioId}", id);
                 return await _unitOfWork.Repository<Portfolio>().GetByIdAsync(id);
+            }
+            catch (KeyNotFoundException)
+            {
+                _logger.LogInformation("Portfolio with ID {PortfolioId} not found", id);
+                return null;
             }
             catch (Exception ex)
             {
@@ -60,7 +67,7 @@ namespace Application.Services
                 if (portfolio == null)
                 {
                     _logger.LogWarning("Portfolio with ID {PortfolioId} not found", id);
-                    return null;
+                    throw new KeyNotFoundException($"Portfolio with ID {id} not found");
                 }
 
                 return portfolio;
@@ -140,7 +147,7 @@ namespace Application.Services
                 // Validation
                 ValidatePortfolio(portfolio);
 
-               await _unitOfWork.Repository<Portfolio>().UpdateAsync(portfolio);
+                await _unitOfWork.Repository<Portfolio>().UpdateAsync(portfolio);
                 await _unitOfWork.CommitAsync();
 
                 _logger.LogInformation("Portfolio updated successfully: {PortfolioId}", portfolio.Id);
