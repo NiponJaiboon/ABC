@@ -22,7 +22,7 @@
 
   // 🔧 C# OmniSharp settings
   "omnisharp.enableEditorConfigSupport": true,
-"omnisharp.enableRoslynAnalyzers": true,
+  "omnisharp.enableRoslynAnalyzers": true,
 
   // ⚡ Code actions
   "editor.codeActionsOnSave": {
@@ -65,7 +65,7 @@
   "[typescript]": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true
-},
+  },
 
   // 💾 Auto save
   "files.autoSave": "onFocusChange",
@@ -103,8 +103,8 @@
   "editor.lineHeight": 1.5,
 
   // 🤖 AI Assistance
-"CodeGPT.apiKey": "OpenAI",
-"dotnet.codeLens.enableReferencesCodeLens": true,
-"dotnet.codeLens.enableTestsCodeLens": true,
-"dotnet.formatting.organizeImportsOnFormat": true
+  "CodeGPT.apiKey": "CodeGPT Plus Beta",
+  "dotnet.codeLens.enableReferencesCodeLens": true,
+  "dotnet.codeLens.enableTestsCodeLens": true,
+  "dotnet.formatting.organizeImportsOnFormat": true
 }

@@ -48,7 +48,7 @@ namespace Infrastructure.Data
                 _ => _applicationDbContext, // Default
             };
 
-            var repoInstance = new GenericRepository<T>(dbContext);
+            var repoInstance = new GenericRepository<T>((ApplicationDbContext)dbContext);
             _repositories[type] = repoInstance;
             return repoInstance;
         }

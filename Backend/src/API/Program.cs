@@ -5,6 +5,8 @@ using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
+using Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -18,6 +20,22 @@ try
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    // Configure Identity & Authentication
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddDefaultTokenProviders();
+
+    // Add JWT Authentication and Authorization
+    builder.Services.AddAllAuthenticationServices(builder.Configuration);
+
+    // Add HSTS for production
+    builder.Services.AddHsts(options =>
+    {
+        options.Preload = true;
+        options.IncludeSubDomains = true;
+        options.MaxAge = TimeSpan.FromDays(365);
+    });
 
     // Configure HTTPS redirection with proper port
     builder.Services.AddHttpsRedirection(options =>
@@ -40,6 +58,9 @@ try
     builder.Services.AddScoped<IProjectService, ProjectService>();
     builder.Services.AddScoped<ISkillService, SkillService>();
     builder.Services.AddScoped<IProjectSkillService, ProjectSkillService>();
+
+    // Register authorization data seeder
+    builder.Services.AddScoped<AuthorizationDataSeeder>();
 
     // Register AutoMapper
     builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
@@ -67,6 +88,11 @@ try
             {
                 await context.Database.CanConnectAsync();
                 Log.Information("Database connection successful");
+
+                // Seed data
+                await DataSeeder.SeedRolesAsync(scope.ServiceProvider);
+                await DataSeeder.SeedAdminUserAsync(scope.ServiceProvider);
+
                 SeedDataExtensions.SeedDatabaseAsync(context).GetAwaiter().GetResult();
             }
             catch (Exception ex)
@@ -76,12 +102,41 @@ try
         }
     }
 
+    // Use HTTPS redirection only in production
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    // Security Headers - Apply security headers middleware
+    app.Use(async (context, next) =>
+    {
+        var securityHeaderService = context.RequestServices.GetRequiredService<ISecurityHeaderService>();
+        await securityHeaderService.ApplySecurityHeadersAsync(context);
+        await next();
+    });
+
+    // Additional Security Headers
+    app.UseHsts();
+
+    // Authentication & Authorization
+    app.UseAuthentication();
+    app.UseAuthorization();
+
     EndpointExtensions.ConfigureHealthCheckEndpoints(app);
 
     app.MapControllers();
 
+    // Seed authorization data in development
+    if (app.Environment.IsDevelopment())
+    {
+        using var scope = app.Services.CreateScope();
+        var seeder = scope.ServiceProvider.GetRequiredService<AuthorizationDataSeeder>();
+        await seeder.SeedDefaultDataAsync();
+    }
+
     Log.Information("ABC API started successfully");
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
@@ -89,5 +144,5 @@ catch (Exception ex)
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }

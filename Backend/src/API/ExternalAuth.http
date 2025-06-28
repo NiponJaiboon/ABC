@@ -1,0 +1,72 @@
+### External Authentication API Tests
+### Test file for ExternalAuth Controller endpoints
+
+@baseUrl = http://localhost:5016/api
+@accessToken = {{login.response.body.accessToken}}
+
+### 1. Get Available External Providers
+GET {{baseUrl}}/ExternalAuth/providers
+Content-Type: application/json
+
+### 2. Test Google OAuth Challenge
+GET {{baseUrl}}/ExternalAuth/challenge/Google?returnUrl=http://localhost:3000/auth/callback
+Content-Type: application/json
+
+### 3. Test Microsoft OAuth Challenge
+GET {{baseUrl}}/ExternalAuth/challenge/Microsoft?returnUrl=http://localhost:3000/auth/callback
+Content-Type: application/json
+
+### 4. Test Unsupported Provider (should fail)
+GET {{baseUrl}}/ExternalAuth/challenge/InvalidProvider?returnUrl=http://localhost:3000/auth/callback
+Content-Type: application/json
+
+### 5. Test External Auth Callback (without external context - will fail gracefully)
+GET {{baseUrl}}/ExternalAuth/callback?returnUrl=http://localhost:3000/dashboard
+Content-Type: application/json
+
+### 6. Get Linked Accounts (requires authentication)
+GET {{baseUrl}}/ExternalAuth/linked-accounts
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 7. Get External Auth Status (requires authentication)
+GET {{baseUrl}}/ExternalAuth/status
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 8. Link External Account (requires authentication) - Initiates OAuth flow
+POST {{baseUrl}}/ExternalAuth/link
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "provider": "Google",
+  "providerKey": "",
+  "providerDisplayName": "Google"
+}
+
+### 9. Unlink External Account (requires authentication)
+POST {{baseUrl}}/ExternalAuth/unlink
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "provider": "Google",
+  "providerKey": "sample-provider-key"
+}
+
+### 10. Test Multiple Provider Challenges
+GET {{baseUrl}}/ExternalAuth/challenge/Google?returnUrl=http://localhost:3000/auth/callback
+### Test redirect and state parameter handling
+
+### 11. Test Provider Display Information
+GET {{baseUrl}}/ExternalAuth/providers
+### Should return provider icons, display names, and status
+
+### Test scenarios for Step 8 validation:
+### - Provider validation and security
+### - OAuth flow initiation
+### - Callback handling
+### - Account linking and unlinking
+### - User authentication status
+### - Error handling for invalid requests

@@ -15,7 +15,6 @@ namespace Infrastructure.Data
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false)
                 .AddJsonFile("appsettings.Development.json", optional: true)
-                .AddEnvironmentVariables()
                 .Build();
 
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();

@@ -1,0 +1,201 @@
+### Test Account Registration and Login - ABC Portfolio API
+
+@base_url = http://localhost:5011/api
+@content_type = application/json
+
+### 1. Register a new user
+POST {{base_url}}/account/register
+Content-Type: {{content_type}}
+
+{
+  "userName": "testuser",
+  "email": "test@example.com",
+  "password": "Test123!",
+  "confirmPassword": "Test123!",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### 2. Login with email
+POST {{base_url}}/account/login
+Content-Type: {{content_type}}
+
+{
+  "emailOrUsername": "test@example.com",
+  "password": "Test123!",
+  "rememberMe": false
+}
+
+### 3. Login with username
+POST {{base_url}}/account/login
+Content-Type: {{content_type}}
+
+{
+  "emailOrUsername": "testuser",
+  "password": "Test123!",
+  "rememberMe": true
+}
+
+### 4. Get current user (requires authorization)
+# Set the Authorization header with "Bearer {access_token}" from login response
+GET {{base_url}}/account/me
+Authorization: Bearer {{access_token}}
+
+### 5. Change password (requires authorization)
+POST {{base_url}}/account/change-password
+Content-Type: {{content_type}}
+Authorization: Bearer {{access_token}}
+
+{
+  "currentPassword": "Test123!",
+  "newPassword": "NewTest123!",
+  "confirmPassword": "NewTest123!"
+}
+
+### 6. Refresh token
+POST {{base_url}}/account/refresh-token
+Content-Type: {{content_type}}
+
+{
+  "accessToken": "{{access_token}}",
+  "refreshToken": "{{refresh_token}}"
+}
+
+### 7. Logout (requires authorization)
+POST {{base_url}}/account/logout
+Authorization: Bearer {{access_token}}
+
+### Test Error Cases
+
+### 8. Register with existing email
+POST {{base_url}}/account/register
+Content-Type: {{content_type}}
+
+{
+  "userName": "testuser2",
+  "email": "test@example.com",
+  "password": "Test123!",
+  "confirmPassword": "Test123!",
+  "firstName": "Test",
+  "lastName": "User2"
+}
+
+### 9. Register with existing username
+POST {{base_url}}/account/register
+Content-Type: {{content_type}}
+
+{
+  "userName": "testuser",
+  "email": "test2@example.com",
+  "password": "Test123!",
+  "confirmPassword": "Test123!",
+  "firstName": "Test",
+  "lastName": "User2"
+}
+
+### 10. Login with invalid credentials
+POST {{base_url}}/account/login
+Content-Type: {{content_type}}
+
+{
+  "emailOrUsername": "test@example.com",
+  "password": "WrongPassword",
+  "rememberMe": false
+}
+
+### 11. Register with weak password
+POST {{base_url}}/account/register
+Content-Type: {{content_type}}
+
+{
+  "userName": "weakuser",
+  "email": "weak@example.com",
+  "password": "123",
+  "confirmPassword": "123",
+  "firstName": "Weak",
+  "lastName": "User"
+}
+
+### 12. Register with password mismatch
+POST {{base_url}}/account/register
+Content-Type: {{content_type}}
+
+{
+  "userName": "mismatchuser",
+  "email": "mismatch@example.com",
+  "password": "Test123!",
+  "confirmPassword": "Different123!",
+  "firstName": "Mismatch",
+  "lastName": "User"
+}
+
+### 13. Register with invalid email
+POST {{base_url}}/account/register
+Content-Type: {{content_type}}
+
+{
+  "userName": "invalidemail",
+  "email": "not-an-email",
+  "password": "Test123!",
+  "confirmPassword": "Test123!",
+  "firstName": "Invalid",
+  "lastName": "Email"
+}
+
+### Test Password & Security Features - Step 6
+
+### Get Password Requirements
+GET {{base_url}}/account/password-requirements
+
+### Validate Password Strength
+POST {{base_url}}/account/validate-password
+Content-Type: {{content_type}}
+
+{
+  "password": "Test123!",
+  "userName": "testuser",
+  "email": "test@example.com"
+}
+
+### Test Weak Password Validation
+POST {{base_url}}/account/validate-password
+Content-Type: {{content_type}}
+
+{
+  "password": "123",
+  "userName": "weakuser",
+  "email": "weak@example.com"
+}
+
+### Test Common Password Validation
+POST {{base_url}}/account/validate-password
+Content-Type: {{content_type}}
+
+{
+  "password": "password123",
+  "userName": "testuser2",
+  "email": "test2@example.com"
+}
+
+### Test Password with Username
+POST {{base_url}}/account/validate-password
+Content-Type: {{content_type}}
+
+{
+  "password": "testuser123",
+  "userName": "testuser",
+  "email": "test@example.com"
+}
+
+### Admin User Registration (for testing purposes)
+POST {{base_url}}/account/register
+Content-Type: {{content_type}}
+
+{
+  "userName": "admin",
+  "email": "admin@abc.com",
+  "password": "Admin123!",
+  "confirmPassword": "Admin123!",
+  "firstName": "System",
+  "lastName": "Admin"
+}

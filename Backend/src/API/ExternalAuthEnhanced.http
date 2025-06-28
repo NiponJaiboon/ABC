@@ -1,0 +1,151 @@
+### Enhanced External Authentication API Tests - Step 9
+### Test file for Enhanced Account Linking System
+
+@baseUrl = http://localhost:5011/api
+@accessToken = {{login.response.body.accessToken}}
+
+### Login to get access token first
+POST {{baseUrl}}/account/login
+Content-Type: application/json
+
+{
+  "emailOrUsername": "testapi@example.com",
+  "password": "SecurePassword123!",
+  "rememberMe": false
+}
+
+### 1. Get Comprehensive Account Summary (Step 9)
+GET {{baseUrl}}/ExternalAuth/summary
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 2. Get Security Score (Step 9)
+GET {{baseUrl}}/ExternalAuth/security-score
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 3. Enhanced Account Linking - Initiate with Conflict Detection (Step 9)
+POST {{baseUrl}}/ExternalAuth/link-enhanced
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "provider": "Google",
+  "returnUrl": "http://localhost:3000/auth/success",
+  "forceLink": false,
+  "userConsent": "I understand the implications"
+}
+
+### 4. Enhanced Account Linking - Microsoft (Step 9)
+POST {{baseUrl}}/ExternalAuth/link-enhanced
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "provider": "Microsoft",
+  "returnUrl": "http://localhost:3000/auth/success",
+  "forceLink": false
+}
+
+### 5. Check if Account Can Be Unlinked (Step 9)
+GET {{baseUrl}}/ExternalAuth/can-unlink?provider=Google&providerKey=sample-key
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 6. Resolve Account Linking Conflict (Step 9)
+POST {{baseUrl}}/ExternalAuth/resolve-conflict
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "conflictToken": "sample-conflict-token-123",
+  "resolution": "Link",
+  "password": "SecurePassword123!",
+  "confirmAction": true
+}
+
+### 7. Bulk Account Action - Check Available Actions (Step 9)
+POST {{baseUrl}}/ExternalAuth/bulk-action
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "action": "SetPrimary",
+  "providerKeys": [],
+  "newPrimaryProvider": "Google",
+  "requirePasswordConfirmation": true,
+  "password": "SecurePassword123!"
+}
+
+### 8. Test Enhanced Linking Callback (Step 9)
+### This would be called automatically after OAuth flow
+GET {{baseUrl}}/ExternalAuth/link-callback-enhanced?returnUrl=http://localhost:3000/dashboard
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### 9. Test Conflict Resolution - Cancel Action (Step 9)
+POST {{baseUrl}}/ExternalAuth/resolve-conflict
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "conflictToken": "sample-conflict-token-456",
+  "resolution": "Cancel",
+  "confirmAction": true
+}
+
+### 10. Test Bulk Unlink All Accounts (Step 9)
+POST {{baseUrl}}/ExternalAuth/bulk-action
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "action": "UnlinkAll",
+  "requirePasswordConfirmation": true,
+  "password": "SecurePassword123!"
+}
+
+### Test Scenarios for Step 9 Enhanced Features:
+### - Comprehensive account summary with security scoring
+### - Enhanced conflict detection and resolution
+### - Bulk account management operations
+### - Security recommendations engine
+### - Advanced linking workflows with user confirmation
+### - Real-time security score calculation
+
+### Expected Enhanced Responses:
+
+### Account Summary Response:
+# {
+#   "totalLinkedAccounts": 0,
+#   "linkedAccounts": [],
+#   "availableProviders": ["Google", "Microsoft", "GitHub", "Facebook"],
+#   "hasPassword": true,
+#   "canUnlinkAccounts": true,
+#   "securityRecommendations": [
+#     "Link external accounts for faster login experience"
+#   ],
+#   "securityScore": {
+#     "overallScore": 45,
+#     "securityLevel": "Good",
+#     "positiveFactors": ["Password authentication enabled"],
+#     "improvementAreas": ["Link external accounts for convenience and security"],
+#     "hasTwoFactorMethods": false,
+#     "authenticationMethodsCount": 1
+#   }
+# }
+
+### Security Score Response:
+# {
+#   "overallScore": 45,
+#   "securityLevel": "Good",
+#   "positiveFactors": [
+#     "Password authentication enabled",
+#     "Email verified"
+#   ],
+#   "improvementAreas": [
+#     "Link external accounts for convenience and security"
+#   ],
+#   "hasTwoFactorMethods": false,
+#   "authenticationMethodsCount": 1
+# }

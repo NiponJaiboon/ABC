@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.Interfaces;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
@@ -10,9 +11,9 @@ namespace Infrastructure.Repositories
     public class GenericRepository<T> : IGenericRepository<T>
         where T : class
     {
-        protected readonly DbContext _dbContext;
+        protected readonly ApplicationDbContext _dbContext;
 
-        public GenericRepository(DbContext dbContext)
+        public GenericRepository(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
         }
