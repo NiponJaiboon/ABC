@@ -17,7 +17,7 @@ RUN dotnet restore
 COPY . .
 
 # Build and publish
-RUN dotnet publish -c Release -o out
+RUN dotnet publish API/ABC.API.csproj -c Release -o out
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
