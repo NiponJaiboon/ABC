@@ -1,41 +1,63 @@
+export type SkillCategory =
+  | "Technical"
+  | "Programming"
+  | "Framework"
+  | "Database"
+  | "DevOps"
+  | "Design"
+  | "Management"
+  | "Language"
+  | "Other";
+
+export type ProficiencyLevel = "Beginner" | "Intermediate" | "Advanced" | "Expert";
+
 export interface Skill {
   id: string
   name: string
-  category: string
-  proficiencyLevel: 1 | 2 | 3 | 4 | 5
-  experienceYears: number
-  lastUsed: string
+  category: SkillCategory
+  proficiencyLevel: ProficiencyLevel
+  yearsOfExperience: number
+  lastUsed?: string
   userId: string
   createdAt: string
   updatedAt: string
+  description?: string
+  tags?: string[]
   certifications?: string[]
+  isActive?: boolean
   projects?: Project[]
 }
 
 export interface CreateSkillRequest {
   name: string
-  category: string
-  proficiencyLevel: Skill['proficiencyLevel']
-  experienceYears: number
-  lastUsed: string
+  category: SkillCategory
+  proficiencyLevel: ProficiencyLevel
+  yearsOfExperience: number
+  lastUsed?: string
+  description?: string
+  tags?: string[]
   certifications?: string[]
+  isActive?: boolean
 }
 
 export interface UpdateSkillRequest {
   name?: string
-  category?: string
-  proficiencyLevel?: Skill['proficiencyLevel']
-  experienceYears?: number
+  category?: SkillCategory
+  proficiencyLevel?: ProficiencyLevel
+  yearsOfExperience?: number
   lastUsed?: string
+  description?: string
+  tags?: string[]
   certifications?: string[]
+  isActive?: boolean
 }
 
 export interface GetSkillsParams {
   page?: number
   limit?: number
   search?: string
-  category?: string
-  proficiencyLevel?: Skill['proficiencyLevel']
+  category?: SkillCategory
+  proficiencyLevel?: ProficiencyLevel
   sortBy?: 'name' | 'category' | 'proficiencyLevel' | 'lastUsed'
   sortOrder?: 'asc' | 'desc'
 }
@@ -48,7 +70,7 @@ export interface SkillResponse {
   totalPages: number
 }
 
-export interface SkillCategory {
+export interface SkillCategoryCount {
   name: string
   count: number
 }
