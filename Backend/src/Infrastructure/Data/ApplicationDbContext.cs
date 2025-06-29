@@ -24,6 +24,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<UserPermission> UserPermissions { get; set; }
     public DbSet<ScopeDefinitionEntity> ScopeDefinitions { get; set; }
 
+    // Step 14: Audit & Logging
+    public DbSet<AuthenticationAuditLog> AuthenticationAuditLogs { get; set; }
+    public DbSet<FailedLoginAttempt> FailedLoginAttempts { get; set; }
+    public DbSet<UserActivityAuditLog> UserActivityAuditLogs { get; set; }
+    public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -191,38 +197,130 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.IsDefault);
         });
-    }
 
-    private static void ConfigurePortfolioRelationships(ModelBuilder builder)
-    {
-        builder.Entity<Portfolio>(entity =>
+        // Step 14: Configure Audit entities
+        builder.Entity<AuthenticationAuditLog>(entity =>
         {
-            entity.HasMany(p => p.Projects)
-                  .WithOne(p => p.Portfolio)
-                  .HasForeignKey(p => p.PortfolioId)
+            entity.ToTable("AuthenticationAuditLogs");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.Username).HasMaxLength(100);
+            entity.Property(e => e.Email).HasMaxLength(255);
+            entity.Property(e => e.EventType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Result).IsRequired();
+            entity.Property(e => e.FailureReason).HasMaxLength(500);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.AuthenticationMethod).HasMaxLength(100);
+            entity.Property(e => e.SessionId).HasMaxLength(100);
+            entity.Property(e => e.Timestamp).IsRequired();
+            entity.Property(e => e.AdditionalData).HasMaxLength(1000);
+
+            // Indexes
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.EventType);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.Result);
+
+            // Foreign key to ApplicationUser
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<FailedLoginAttempt>(entity =>
+        {
+            entity.ToTable("FailedLoginAttempts");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.Username).HasMaxLength(100);
+            entity.Property(e => e.Email).HasMaxLength(255);
+            entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.FailureReason).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.AttemptTime).IsRequired();
+            entity.Property(e => e.AdditionalData).HasMaxLength(1000);
+
+            // Indexes
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.AttemptTime);
+            entity.HasIndex(e => new { e.IpAddress, e.AttemptTime });
+
+            // Foreign key to ApplicationUser
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<UserActivityAuditLog>(entity =>
+        {
+            entity.ToTable("UserActivityAuditLogs");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+            entity.Property(e => e.Username).HasMaxLength(100);
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Resource).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ResourceId).HasMaxLength(450);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.Timestamp).IsRequired();
+            entity.Property(e => e.Details).HasMaxLength(2000);
+            entity.Property(e => e.OldValues).HasMaxLength(1000);
+            entity.Property(e => e.NewValues).HasMaxLength(1000);
+
+            // Indexes
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Action);
+            entity.HasIndex(e => e.Resource);
+            entity.HasIndex(e => e.ResourceId);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => new { e.Resource, e.ResourceId });
+
+            // Foreign key to ApplicationUser
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<SecurityAuditLog>(entity =>
+        {
+            entity.ToTable("SecurityAuditLogs");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.EventType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Severity).IsRequired();
+            entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.RequestPath).HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.AdditionalData).HasMaxLength(2000);
+            entity.Property(e => e.Timestamp).IsRequired();
+            entity.Property(e => e.Investigated).IsRequired();
+            entity.Property(e => e.InvestigationNotes).HasMaxLength(1000);
+
+            // Indexes
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.EventType);
+            entity.HasIndex(e => e.Severity);
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.Timestamp);
+            entity.HasIndex(e => e.Investigated);
+
+            // Foreign key to ApplicationUser
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
     }
 
-    private static void ConfigureProjectRelationships(ModelBuilder builder)
-    {
-        builder.Entity<Project>(entity =>
-        {
-            entity.HasMany(p => p.ProjectSkills)
-                  .WithOne(ps => ps.Project)
-                  .HasForeignKey(ps => ps.ProjectId)
-                  .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
-
-    private static void ConfigureSkillRelationships(ModelBuilder builder)
-    {
-        builder.Entity<Skill>(entity =>
-        {
-            entity.HasMany(s => s.ProjectSkills)
-                  .WithOne(ps => ps.Skill)
-                  .HasForeignKey(ps => ps.SkillId)
-                  .OnDelete(DeleteBehavior.Cascade);
-        });
-    }
 }

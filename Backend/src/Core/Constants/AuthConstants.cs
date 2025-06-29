@@ -138,6 +138,17 @@ public static class GrantTypes
     public const string DeviceCode = "device_code";
 }
 
+public static class AuthenticationMethods
+{
+    public const string Local = "LOCAL";
+    public const string Google = "GOOGLE";
+    public const string Microsoft = "MICROSOFT";
+    public const string GitHub = "GITHUB";
+    public const string Facebook = "FACEBOOK";
+    public const string OAuth = "OAUTH";
+    public const string Hybrid = "HYBRID";
+}
+
 public static class HybridAuthConstants
 {
     public static class SessionPolicy

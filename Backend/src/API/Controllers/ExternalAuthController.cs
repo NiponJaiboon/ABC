@@ -5,6 +5,7 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SystemClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace ABC.API.Controllers;
@@ -15,7 +16,7 @@ public class ExternalAuthController : ControllerBase
 {
     private readonly IExternalAuthenticationService _externalAuthService;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IAuthenticationAuditService _auditService;
+    private readonly ILegacyAuthenticationAuditService _auditService;
     private readonly ILogger<ExternalAuthController> _logger;
 
     // Constants for common messages
@@ -25,7 +26,7 @@ public class ExternalAuthController : ControllerBase
     public ExternalAuthController(
         IExternalAuthenticationService externalAuthService,
         UserManager<ApplicationUser> userManager,
-        IAuthenticationAuditService auditService,
+        ILegacyAuthenticationAuditService auditService,
         ILogger<ExternalAuthController> logger)
     {
         _externalAuthService = externalAuthService;
@@ -70,6 +71,7 @@ public class ExternalAuthController : ControllerBase
     /// <returns>Challenge result to redirect to external provider</returns>
     [HttpGet("challenge/{provider}")]
     [AllowAnonymous]
+    [EnableRateLimiting("ExternalAuthPolicy")]
     public async Task<IActionResult> Challenge(string provider, [FromQuery] string returnUrl = "")
     {
         try

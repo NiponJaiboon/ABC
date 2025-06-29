@@ -247,8 +247,8 @@ public static class AuthenticationConfigurationService
         // Register external authentication service
         services.AddScoped<IExternalAuthenticationService, ExternalAuthenticationService>();
 
-        // Register authentication audit service
-        services.AddScoped<IAuthenticationAuditService, AuthenticationAuditService>();
+        // Register authentication audit service (legacy)
+        services.AddScoped<ILegacyAuthenticationAuditService, LegacyAuthenticationAuditService>();
 
         // Register account linking service (Step 9)
         services.AddScoped<IAccountLinkingService, AccountLinkingService>();

@@ -6,12 +6,14 @@ using Core.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize] // Require authentication for all endpoints
+[EnableRateLimiting("ApiPolicy")] // Apply API rate limiting
 public class OAuthManagementController : ControllerBase
 {
     private readonly IOAuthClientService _clientService;

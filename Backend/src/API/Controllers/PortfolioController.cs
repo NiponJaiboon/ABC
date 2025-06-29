@@ -3,10 +3,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Application.Dtos;
 using AutoMapper;
+using Core.Constants;
 using Core.Entities;
 using Core.Interfaces;
+using Core.Models;
+using Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SystemClaimTypes = System.Security.Claims.ClaimTypes;
 
 namespace API.Controllers
 {
@@ -17,15 +22,18 @@ namespace API.Controllers
         private readonly IPortfolioService _portfolioService;
         private readonly IMapper _mapper;
         private readonly ILogger<PortfolioController> _logger;
+        private readonly IUserActivityAuditService _auditService;
 
         public PortfolioController(
             IPortfolioService portfolioService,
             IMapper mapper,
-            ILogger<PortfolioController> logger)
+            ILogger<PortfolioController> logger,
+            IUserActivityAuditService auditService)
         {
             _portfolioService = portfolioService ?? throw new ArgumentNullException(nameof(portfolioService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
         }
 
         /// <summary>
@@ -49,7 +57,8 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving all portfolios");
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while retrieving portfolios"
                 });
@@ -90,7 +99,8 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving portfolio with ID: {PortfolioId}", id);
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while retrieving the portfolio"
                 });
@@ -128,7 +138,8 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving portfolios for user: {UserId}", userId);
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while retrieving portfolios"
                 });
@@ -141,6 +152,7 @@ namespace API.Controllers
         /// <param name="request">Portfolio creation data</param>
         /// <returns>Created portfolio</returns>
         [HttpPost]
+        [Authorize] // Step 14: Ensure authorization for audit logging
         [ProducesResponseType(typeof(PortfolioDto), 201)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -164,6 +176,22 @@ namespace API.Controllers
 
                 _logger.LogInformation("Portfolio created successfully with ID: {PortfolioId}", createdPortfolio.Id);
 
+                // Step 14: Log user activity for portfolio creation
+                var userId = User.FindFirst(SystemClaimTypes.NameIdentifier)?.Value;
+                var username = User.FindFirst(SystemClaimTypes.Name)?.Value ?? User.Identity?.Name;
+                if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(username))
+                {
+                    var activityRequest = AuditContextHelper.CreateUserActivityRequest(
+                        userId, username, AuditEventTypes.Create, AuditResourceTypes.Portfolio,
+                        HttpContext, new UserActivityDetails
+                        {
+                            ResourceId = createdPortfolio.Id.ToString(),
+                            Description = $"Created portfolio '{createdPortfolio.Title}'",
+                            NewValues = new { Title = createdPortfolio.Title, UserId = createdPortfolio.UserId }
+                        });
+                    await _auditService.LogActivityAsync(activityRequest);
+                }
+
                 return CreatedAtAction(
                     nameof(GetPortfolioById),
                     new { id = createdPortfolio.Id },
@@ -177,7 +205,8 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating portfolio");
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while creating the portfolio"
                 });
@@ -191,6 +220,7 @@ namespace API.Controllers
         /// <param name="request">Portfolio update data</param>
         /// <returns>Updated portfolio</returns>
         [HttpPut("{id}")]
+        [Authorize] // Step 14: Ensure authorization for audit logging
         [ProducesResponseType(typeof(PortfolioDto), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
@@ -223,6 +253,9 @@ namespace API.Controllers
                     return NotFound(new { Message = $"Portfolio with ID {id} not found" });
                 }
 
+                // Get old values for audit logging
+                var existingPortfolio = await _portfolioService.GetPortfolioByIdAsync(id);
+
                 // Map DTO to Entity using AutoMapper
                 var portfolio = _mapper.Map<Portfolio>(request);
 
@@ -230,6 +263,24 @@ namespace API.Controllers
                 var portfolioDto = _mapper.Map<PortfolioDto>(updatedPortfolio);
 
                 _logger.LogInformation("Portfolio with ID {PortfolioId} updated successfully", id);
+
+                // Step 14: Log user activity for portfolio update
+                var userId = User.FindFirst(SystemClaimTypes.NameIdentifier)?.Value;
+                var username = User.FindFirst(SystemClaimTypes.Name)?.Value ?? User.Identity?.Name;
+                if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(username))
+                {
+                    var activityRequest = AuditContextHelper.CreateUserActivityRequest(
+                        userId, username, AuditEventTypes.Update, AuditResourceTypes.Portfolio,
+                        HttpContext, new UserActivityDetails
+                        {
+                            ResourceId = updatedPortfolio.Id.ToString(),
+                            Description = $"Updated portfolio '{updatedPortfolio.Title}'",
+                            OldValues = new { Title = existingPortfolio?.Title },
+                            NewValues = new { Title = updatedPortfolio.Title }
+                        });
+                    await _auditService.LogActivityAsync(activityRequest);
+                }
+
                 return Ok(portfolioDto);
             }
             catch (ArgumentException ex)
@@ -240,7 +291,8 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating portfolio with ID: {PortfolioId}", id);
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while updating the portfolio"
                 });
@@ -253,6 +305,7 @@ namespace API.Controllers
         /// <param name="id">Portfolio ID</param>
         /// <returns>No content if successful</returns>
         [HttpDelete("{id}")]
+        [Authorize] // Step 14: Ensure authorization for audit logging
         [ProducesResponseType(204)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]
@@ -267,6 +320,14 @@ namespace API.Controllers
                     return BadRequest("Portfolio ID must be greater than 0");
                 }
 
+                // Get portfolio details for audit logging before deletion
+                var portfolioToDelete = await _portfolioService.GetPortfolioByIdAsync(id);
+                if (portfolioToDelete == null)
+                {
+                    _logger.LogWarning("Portfolio with ID {PortfolioId} not found for deletion", id);
+                    return NotFound(new { Message = $"Portfolio with ID {id} not found" });
+                }
+
                 var deleted = await _portfolioService.DeletePortfolioAsync(id);
 
                 if (!deleted)
@@ -276,12 +337,30 @@ namespace API.Controllers
                 }
 
                 _logger.LogInformation("Portfolio with ID {PortfolioId} deleted successfully", id);
+
+                // Step 14: Log user activity for portfolio deletion
+                var userId = User.FindFirst(SystemClaimTypes.NameIdentifier)?.Value;
+                var username = User.FindFirst(SystemClaimTypes.Name)?.Value ?? User.Identity?.Name;
+                if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(username))
+                {
+                    var activityRequest = AuditContextHelper.CreateUserActivityRequest(
+                        userId, username, AuditEventTypes.Delete, AuditResourceTypes.Portfolio,
+                        HttpContext, new UserActivityDetails
+                        {
+                            ResourceId = portfolioToDelete.Id.ToString(),
+                            Description = $"Deleted portfolio '{portfolioToDelete.Title}'",
+                            OldValues = new { Title = portfolioToDelete.Title, UserId = portfolioToDelete.UserId }
+                        });
+                    await _auditService.LogActivityAsync(activityRequest);
+                }
+
                 return NoContent();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting portfolio with ID: {PortfolioId}", id);
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while deleting the portfolio"
                 });
@@ -322,7 +401,8 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving portfolio with projects for ID: {PortfolioId}", id);
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while retrieving the portfolio"
                 });
@@ -370,7 +450,8 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error toggling visibility for portfolio: {PortfolioId}", id);
-                return StatusCode(500, new {
+                return StatusCode(500, new
+                {
                     Error = "Internal server error",
                     Message = "An error occurred while updating portfolio visibility"
                 });
@@ -386,7 +467,8 @@ namespace API.Controllers
         public IActionResult Test()
         {
             _logger.LogInformation("Portfolio controller test endpoint called");
-            return Ok(new {
+            return Ok(new
+            {
                 Message = "Portfolio Controller is working!",
                 Timestamp = DateTime.UtcNow,
                 Controller = "PortfolioController",

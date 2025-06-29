@@ -25,7 +25,7 @@ public class HybridAuthenticationService : IHybridAuthenticationService
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ISessionManagementService _sessionManagementService;
-    private readonly IAuthenticationAuditService _auditService;
+    private readonly ILegacyAuthenticationAuditService _auditService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<HybridAuthenticationService> _logger;
 
@@ -34,7 +34,7 @@ public class HybridAuthenticationService : IHybridAuthenticationService
         SignInManager<ApplicationUser> signInManager,
         IJwtTokenService jwtTokenService,
         ISessionManagementService sessionManagementService,
-        IAuthenticationAuditService auditService,
+        ILegacyAuthenticationAuditService auditService,
         IHttpContextAccessor httpContextAccessor,
         ILogger<HybridAuthenticationService> logger)
     {

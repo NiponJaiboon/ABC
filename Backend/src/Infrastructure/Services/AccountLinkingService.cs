@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Core.Entities;
+using Core.Interfaces;
 using Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -25,14 +26,14 @@ public class AccountLinkingService : IAccountLinkingService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IExternalAuthenticationService _externalAuthService;
-    private readonly IAuthenticationAuditService _auditService;
+    private readonly ILegacyAuthenticationAuditService _auditService;
     private readonly ILogger<AccountLinkingService> _logger;
     private readonly Dictionary<string, AccountLinkingConflict> _conflictCache;
 
     public AccountLinkingService(
         UserManager<ApplicationUser> userManager,
         IExternalAuthenticationService externalAuthService,
-        IAuthenticationAuditService auditService,
+        ILegacyAuthenticationAuditService auditService,
         ILogger<AccountLinkingService> logger)
     {
         _userManager = userManager;

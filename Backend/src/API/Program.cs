@@ -1,4 +1,5 @@
 using API.Extensions;
+using API.Middleware;
 using Application.Mappings;
 using Application.Services;
 using Core.Entities;
@@ -28,6 +29,19 @@ try
 
     // Add JWT Authentication and Authorization
     builder.Services.AddAllAuthenticationServices(builder.Configuration);
+
+    // Step 13: Add Security Middleware (Rate Limiting, CORS, Security Headers)
+    builder.Services.AddSecurityMiddleware(builder.Configuration);
+
+    // Step 14: Add Audit & Logging Services
+    builder.Services.AddScoped<IAuthenticationAuditService, EnhancedAuthenticationAuditService>();
+    builder.Services.AddScoped<IFailedLoginTrackingService, FailedLoginTrackingService>();
+    builder.Services.AddScoped<IUserActivityAuditService, UserActivityAuditService>();
+    builder.Services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+    builder.Services.AddScoped<CompositeAuditService>();
+
+    // Keep legacy service for backward compatibility
+    builder.Services.AddScoped<ILegacyAuthenticationAuditService, LegacyAuthenticationAuditService>();
 
     // Add HSTS for production
     builder.Services.AddHsts(options =>
@@ -108,15 +122,10 @@ try
         app.UseHttpsRedirection();
     }
 
-    // Security Headers - Apply security headers middleware
-    app.Use(async (context, next) =>
-    {
-        var securityHeaderService = context.RequestServices.GetRequiredService<ISecurityHeaderService>();
-        await securityHeaderService.ApplySecurityHeadersAsync(context);
-        await next();
-    });
+    // Step 13: Apply Security Middleware (Rate Limiting, CORS, Security Headers)
+    app.UseSecurityMiddleware();
 
-    // Additional Security Headers
+    // Additional Security Headers (HSTS)
     app.UseHsts();
 
     // Authentication & Authorization

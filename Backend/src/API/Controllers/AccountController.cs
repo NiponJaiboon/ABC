@@ -7,6 +7,7 @@ using Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using SystemClaimTypes = System.Security.Claims.ClaimTypes;
 
@@ -27,6 +28,11 @@ public class AccountController : ControllerBase
     private readonly IHybridAuthenticationService _hybridAuthService;
     private readonly ISessionManagementService _sessionManagementService;
 
+    // Step 14: Audit Services
+    private readonly CompositeAuditService _auditService;
+    private readonly IFailedLoginTrackingService _failedLoginService;
+    private readonly ISecurityAuditService _securityAuditService;
+
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
@@ -35,7 +41,10 @@ public class AccountController : ControllerBase
         IExternalAuthenticationService externalAuthService,
         ILogger<AccountController> logger,
         IHybridAuthenticationService hybridAuthService,
-        ISessionManagementService sessionManagementService)
+        ISessionManagementService sessionManagementService,
+        CompositeAuditService auditService,
+        IFailedLoginTrackingService failedLoginService,
+        ISecurityAuditService securityAuditService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -45,6 +54,9 @@ public class AccountController : ControllerBase
         _logger = logger;
         _hybridAuthService = hybridAuthService;
         _sessionManagementService = sessionManagementService;
+        _auditService = auditService;
+        _failedLoginService = failedLoginService;
+        _securityAuditService = securityAuditService;
     }
 
     /// <summary>
@@ -54,6 +66,7 @@ public class AccountController : ControllerBase
     /// <returns>Authentication result with JWT tokens</returns>
     [HttpPost("register")]
     [AllowAnonymous]
+    [EnableRateLimiting("AuthPolicy")]
     public async Task<ActionResult<AuthResult>> Register([FromBody] RegisterModel model)
     {
         try
@@ -121,6 +134,11 @@ public class AccountController : ControllerBase
 
             if (!result.Succeeded)
             {
+                // Step 14: Log registration failure
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                await _auditService.LogRegistrationAsync(
+                    string.Empty, model.UserName, model.Email, false, errors, HttpContext);
+
                 return BadRequest(new AuthResult
                 {
                     Success = false,
@@ -132,6 +150,10 @@ public class AccountController : ControllerBase
             await _userManager.AddToRoleAsync(user, Roles.User);
 
             _logger.LogInformation("User {Email} registered successfully", model.Email);
+
+            // Step 14: Log registration success
+            await _auditService.LogRegistrationAsync(
+                user.Id, user.UserName, user.Email, true, null, HttpContext);
 
             // Generate tokens
             var accessToken = await _jwtTokenService.GenerateAccessTokenAsync(user);
@@ -180,6 +202,7 @@ public class AccountController : ControllerBase
     /// <returns>Authentication result with JWT tokens</returns>
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("AuthPolicy")]
     public async Task<ActionResult<AuthResult>> Login([FromBody] LoginModel model)
     {
         try
@@ -202,6 +225,11 @@ public class AccountController : ControllerBase
 
             if (user == null)
             {
+                // Step 14: Log failed login for unknown user
+                await _auditService.LogFailedLoginAsync(
+                    null, model.EmailOrUsername, null, AuthenticationMethods.Local,
+                    "User not found", HttpContext);
+
                 return Unauthorized(new AuthResult
                 {
                     Success = false,
@@ -213,6 +241,12 @@ public class AccountController : ControllerBase
             if (await _userManager.IsLockedOutAsync(user))
             {
                 var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+
+                // Step 14: Log locked account access attempt
+                await _auditService.LogFailedLoginAsync(
+                    user.Id, user.UserName, user.Email, AuthenticationMethods.Local,
+                    "Account locked", HttpContext);
+
                 return Unauthorized(new AuthResult
                 {
                     Success = false,
@@ -229,23 +263,33 @@ public class AccountController : ControllerBase
             if (!result.Succeeded)
             {
                 var errors = new List<string>();
+                string failureReason;
 
                 if (result.IsLockedOut)
                 {
+                    failureReason = "Account locked due to multiple failed attempts";
                     errors.Add("Account has been locked due to multiple failed attempts.");
                 }
                 else if (result.RequiresTwoFactor)
                 {
+                    failureReason = "Two-factor authentication required";
                     errors.Add("Two-factor authentication is required.");
                 }
                 else if (result.IsNotAllowed)
                 {
+                    failureReason = "Email not confirmed";
                     errors.Add("Sign in is not allowed. Please confirm your email address.");
                 }
                 else
                 {
+                    failureReason = "Invalid credentials";
                     errors.Add("Invalid email/username or password.");
                 }
+
+                // Step 14: Log failed login attempt
+                await _auditService.LogFailedLoginAsync(
+                    user?.Id, user?.UserName ?? model.EmailOrUsername, user?.Email,
+                    AuthenticationMethods.Local, failureReason, HttpContext);
 
                 return Unauthorized(new AuthResult
                 {
@@ -270,6 +314,10 @@ public class AccountController : ControllerBase
             var userRoles = await _userManager.GetRolesAsync(user);
 
             _logger.LogInformation("User {Email} logged in successfully", user.Email);
+
+            // Step 14: Log successful login
+            await _auditService.LogSuccessfulLoginAsync(
+                user.Id, user.UserName, user.Email, AuthenticationMethods.Local, null, HttpContext);
 
             return Ok(new AuthResult
             {
@@ -496,6 +544,14 @@ public class AccountController : ControllerBase
 
             if (success)
             {
+                // Step 14: Log logout
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    var sessionId = User.FindFirst(SessionClaims.SessionId)?.Value;
+                    await _auditService.LogLogoutAsync(userId, user.UserName!, sessionId, HttpContext);
+                }
+
                 return Ok(new { message = "Logged out successfully" });
             }
 

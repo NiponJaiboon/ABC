@@ -1,9 +1,119 @@
 using Core.Entities;
+using Core.Interfaces;
+using Core.Models;
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
-public interface IAuthenticationAuditService
+/// <summary>
+/// Updated AuthenticationAuditService implementing the new IAuthenticationAuditService interface
+/// </summary>
+public class EnhancedAuthenticationAuditService : IAuthenticationAuditService
+{
+    private readonly ApplicationDbContext _context;
+    private readonly ILogger<EnhancedAuthenticationAuditService> _logger;
+
+    public EnhancedAuthenticationAuditService(
+        ApplicationDbContext context,
+        ILogger<EnhancedAuthenticationAuditService> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    public async Task LogAuthenticationEventAsync(AuthenticationAuditRequest request)
+    {
+        try
+        {
+            var auditLog = new AuthenticationAuditLog
+            {
+                Id = Guid.NewGuid(),
+                UserId = request.UserId,
+                Username = request.Username,
+                Email = request.Email,
+                EventType = request.EventType,
+                Result = request.Result,
+                FailureReason = request.FailureReason,
+                IpAddress = request.IpAddress,
+                UserAgent = request.UserAgent,
+                AuthenticationMethod = request.AuthenticationMethod,
+                SessionId = request.SessionId,
+                AdditionalData = request.AdditionalData,
+                Timestamp = DateTime.UtcNow
+            };
+
+            _context.AuthenticationAuditLogs.Add(auditLog);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Authentication event logged: {EventType} for user {Username} from {IpAddress} - Result: {Result}",
+                request.EventType, request.Username ?? "Unknown", request.IpAddress, request.Result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to log authentication event: {EventType} for user {Username}",
+                request.EventType, request.Username ?? "Unknown");
+            // Don't rethrow to avoid breaking the authentication flow
+        }
+    }
+
+    public async Task<IEnumerable<AuthenticationAuditLog>> GetUserAuthenticationLogsAsync(
+        string userId, AuditLogQuery query)
+    {
+        var queryable = _context.AuthenticationAuditLogs
+            .Where(x => x.UserId == userId)
+            .AsQueryable();
+
+        if (query.FromDate.HasValue)
+            queryable = queryable.Where(x => x.Timestamp >= query.FromDate.Value);
+
+        if (query.ToDate.HasValue)
+            queryable = queryable.Where(x => x.Timestamp <= query.ToDate.Value);
+
+        if (!string.IsNullOrEmpty(query.EventType))
+            queryable = queryable.Where(x => x.EventType == query.EventType);
+
+        if (query.AuthResult.HasValue)
+            queryable = queryable.Where(x => x.Result == query.AuthResult.Value);
+
+        return await queryable
+            .OrderByDescending(x => x.Timestamp)
+            .Take(query.MaxRecords)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<AuthenticationAuditLog>> GetRecentAuthenticationEventsAsync(
+        AuditLogQuery query)
+    {
+        var queryable = _context.AuthenticationAuditLogs.AsQueryable();
+
+        if (query.FromDate.HasValue)
+            queryable = queryable.Where(x => x.Timestamp >= query.FromDate.Value);
+
+        if (query.ToDate.HasValue)
+            queryable = queryable.Where(x => x.Timestamp <= query.ToDate.Value);
+
+        if (!string.IsNullOrEmpty(query.EventType))
+            queryable = queryable.Where(x => x.EventType == query.EventType);
+
+        if (query.AuthResult.HasValue)
+            queryable = queryable.Where(x => x.Result == query.AuthResult.Value);
+
+        if (!string.IsNullOrEmpty(query.UserId))
+            queryable = queryable.Where(x => x.UserId == query.UserId);
+
+        return await queryable
+            .OrderByDescending(x => x.Timestamp)
+            .Take(query.MaxRecords)
+            .ToListAsync();
+    }
+}
+
+// Keep the old service for backward compatibility during migration
+public interface ILegacyAuthenticationAuditService
 {
     Task LogAuthenticationAttemptAsync(string userId, string method, string provider, bool success, string? ipAddress = null, string? userAgent = null);
     Task LogExternalLoginAttemptAsync(string provider, string email, bool success, bool isNewUser, string? ipAddress = null);
@@ -12,11 +122,11 @@ public interface IAuthenticationAuditService
     Task LogSecurityEventAsync(string userId, string eventType, string description, string? ipAddress = null);
 }
 
-public class AuthenticationAuditService : IAuthenticationAuditService
+public class LegacyAuthenticationAuditService : ILegacyAuthenticationAuditService
 {
-    private readonly ILogger<AuthenticationAuditService> _logger;
+    private readonly ILogger<LegacyAuthenticationAuditService> _logger;
 
-    public AuthenticationAuditService(ILogger<AuthenticationAuditService> logger)
+    public LegacyAuthenticationAuditService(ILogger<LegacyAuthenticationAuditService> logger)
     {
         _logger = logger;
     }
@@ -34,7 +144,6 @@ public class AuthenticationAuditService : IAuthenticationAuditService
             _logger.LogWarning(logMessage, userId, method, provider, success, ipAddress, userAgent);
         }
 
-        // In a real implementation, you would also save to database
         await Task.CompletedTask;
     }
 
