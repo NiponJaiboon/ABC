@@ -17,7 +17,7 @@
   - `20250629071351_AddAuditEntities`
 
 ### **✅ Database Schema สมบูรณ์**
-- ✅ ตาราง `Users`, `Portfolios`, `Projects` 
+- ✅ ตาราง `Users`, `Portfolios`, `Projects`
 - ✅ ตาราง `UserSessions`, `OAuthClients`
 - ✅ ตาราง `AuditLogs`, `UserAudits` (Step 14)
 - ✅ ตาราง `__EFMigrationsHistory`
@@ -27,7 +27,7 @@
 ```
 [17:41:46 INF] Database connection successful
 [17:41:47 INF] Role 'Admin' created successfully
-[17:41:47 INF] Role 'User' created successfully  
+[17:41:47 INF] Role 'User' created successfully
 [17:41:47 INF] Role 'Moderator' created successfully
 [17:41:48 INF] Admin user created successfully
 [17:41:48 INF] Authorization default data seeded successfully
@@ -39,10 +39,10 @@
 
 #### **Phase 1: Local Authentication** ✅
 - ✅ Failed Login Detection (401)
-- ✅ Successful Login (200) 
+- ✅ Successful Login (200)
 - ✅ JWT Token Generation
 
-#### **Phase 2: External OAuth** ✅  
+#### **Phase 2: External OAuth** ✅
 - ✅ Available Providers (200)
 - ✅ Google OAuth Challenge (302)
 - ✅ Microsoft OAuth Challenge (302)
@@ -68,7 +68,7 @@
 ### **1. Database Migration Process**
 ```bash
 # 1. วิเคราะห์ข้อมูลใน Supabase
-./run_sql_analysis.sh 
+./run_sql_analysis.sh
 # ผลลัพธ์: พบ 8 portfolios, 2 มี UserId ว่าง, 0 users
 
 # 2. ลบข้อมูลที่มีปัญหา

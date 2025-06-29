@@ -8,7 +8,7 @@ cat > cleanup_portfolios.sql << 'EOF'
 DELETE FROM "Portfolios" WHERE "UserId" IS NULL OR "UserId" = '';
 
 -- ลบ portfolios ที่ UserId ไม่มีอยู่ใน Users table
-DELETE FROM "Portfolios" 
+DELETE FROM "Portfolios"
 WHERE "UserId" NOT IN (SELECT "Id" FROM "Users");
 
 -- แสดงข้อมูลที่เหลือ
